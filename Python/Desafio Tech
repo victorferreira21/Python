@@ -1,0 +1,173 @@
+import numpy as np
+import image
+import audio
+
+img_path = None
+lower_color = None
+upper_color = None
+color = None
+
+
+def validate_input(lower_option, upper_option):
+    while True:
+        value = input('Insira uma opção: ')
+        try:
+            value = int(value)
+        except ValueError:
+            print('Valor inválido!')
+            continue
+
+        if lower_option <= value <= upper_option:
+            return value
+        else:
+            print(f'Escolha um número entre {lower_option} e {upper_option}')
+
+
+def color_menu():
+    global lower_color
+    global upper_color
+    global color
+
+    print('\nSeleção de cores'
+          '\n1. Vermelho'
+          '\n2. Laranja'
+          '\n3. Amarelo'
+          '\n4. Verde'
+          '\n5. Azul'
+          '\n6. Rosa')
+
+    color = validate_input(1, 6)
+
+    if color == 1:
+        color = 'vermelho'
+        lower_color = np.array([0, 100, 100])
+        upper_color = np.array([10, 255, 255])
+    elif color == 2:
+        color = 'laranja'
+        lower_color = np.array([10, 100, 100])
+        upper_color = np.array([20, 255, 255])
+    elif color == 3:
+        color = 'amarelo'
+        lower_color = np.array([20, 100, 100])
+        upper_color = np.array([40, 255, 255])
+    elif color == 4:
+        color = 'verde'
+        lower_color = np.array([40, 100, 100])
+        upper_color = np.array([70, 255, 255])
+    elif color == 5:
+        color = 'azul'
+        lower_color = np.array([100, 100, 100])
+        upper_color = np.array([130, 255, 255])
+    elif color == 6:
+        color = 'rosa'
+        lower_color = np.array([140, 100, 100])
+        upper_color = np.array([160, 255, 255])
+
+
+def image_menu():
+    global img_path
+
+    print('\nSeleção de imagens'
+          '\n1. Arco-íris'
+          '\n2. Cubo mágico'
+          '\n3. Semáforo'
+          '\n4. M&Ms'
+          '\n5. Logo da FAFIC')
+
+    img_number = validate_input(1, 5)
+
+    if 1 <= img_number <= 5:
+        img_path = f'img{img_number}.jpg'
+
+
+def main_menu():
+    while True:
+        print('\n** Menu Inicial **'
+              '\n1. Iniciar'
+              '\n2. Créditos'
+              '\n0. Sair')
+
+        option = validate_input(0, 2)
+
+        if option == 0:
+            break
+        elif option == 1:
+            start_game()
+        elif option == 2:
+            show_credits()
+
+
+def start_game():
+    global lower_color
+    global upper_color
+    global img_path
+    global color
+
+    while True:
+        print('\n** Menu **'
+              '\n1. Escolher cor'
+              '\n2. Escolher imagem'
+              '\n3. Gerar imagem com cor destacada'
+              '\n0. Voltar')
+
+        option = validate_input(0, 3)
+
+        if option == 0:
+            break
+        elif option == 1:
+            color_menu()
+        elif option == 2:
+            image_menu()
+        elif option == 3:
+            if lower_color is None or upper_color is None or color is None:
+                print('Escolha uma cor antes de gerar uma imagem')
+            elif img_path is None:
+                img_path = 'calibragem.jpg'
+                audio.get_color_explanation(color)
+                image.highlitght_color(lower_color, upper_color, img_path)
+            else:
+                audio.get_color_explanation(color)
+                image.highlitght_color(lower_color, upper_color, img_path)
+
+
+def show_credits():
+    print('\n** Créditos **'
+          '\nEste programa foi criado por:'
+          '\n- João Victor Ferreira'
+          '\n- Gustavo Fontes Gadelha'
+          '\n- Caique Estrela Guedes'
+          '\n- Felipe Freitas de Oliveira'
+          '\n Obrigado por usar!')
+
+
+if __name__ == "__main__":
+    main_menu()
+
+
+
+#image
+import cv2
+
+
+def highlitght_color(lower_color, upper_color, img_path):
+    try:
+        image = cv2.imread(img_path)
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        color_mask = cv2.inRange(hsv, lower_color, upper_color)
+
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        gray_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
+
+        gray_masked_image = cv2.bitwise_and(gray_image, gray_image, mask=~color_mask)
+        highlighted_image = cv2.bitwise_and(image, image, mask=color_mask)
+
+        result = cv2.add(gray_masked_image, highlighted_image)
+
+        cv2.imshow('Imagem resultante', result)
+        cv2.imshow('Imagem original', image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    except Exception as e:
+        print('Ocorreu um erro:', e)
